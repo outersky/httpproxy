@@ -28,6 +28,8 @@ import java.awt.CardLayout
 import javax.swing.ImageIcon
 import java.util.zip.GZIPInputStream
 
+import kotlin.swing.*
+
 import cn.hillwind.app.proxy.*
 
 class HttpTableModel() : AbstractTableModel() {
@@ -47,7 +49,6 @@ class HttpTableModel() : AbstractTableModel() {
         fireTableDataChanged()
     }
 
-    [suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")]
     override fun getValueAt(row:Int, col:Int):Any? {
         val entry = entities[row]
 
@@ -65,12 +66,10 @@ class HttpTableModel() : AbstractTableModel() {
         }
     }
 
-    [suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")]
     override fun getColumnName(column:Int):String{
         return headers[column]
     }
 
-    [suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")]
     override fun getColumnClass(columnIndex:Int) : Class<*> {
         return when(columnIndex){
             0,1,5,6 -> javaClass<Int>()
@@ -78,7 +77,6 @@ class HttpTableModel() : AbstractTableModel() {
         }
     }
 
-    [suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")]
     override fun isCellEditable(rowIndex:Int,columnIndex:Int):Boolean = false
 }
 
@@ -168,53 +166,62 @@ class MainFrame(val title:String) : JFrame(title){
         addTab("Response",previewPanel)
     }
 
-    val toolbar = JToolBar() me {
-        add(JButton(object : AbstractAction("Start"){
-            var proxy:jProxy? = null
+    var proxy:jProxy? = null
 
-            override fun actionPerformed(p0: ActionEvent) {
-                if(proxy!=null && proxy!!.isRunning()){
-                    proxy!!.closeSocket()
-                    putValue(Action.NAME,"Start")
-                }else{
-                    proxy = jProxy(18888, "", 0, 20000)
-                    proxy!!.start()
-                    putValue(Action.NAME,"Stop")
-                }
-            }
-        }))
-        add(JButton(object : AbstractAction("Start Monitor"){
-            var monitoring = false
-            override fun actionPerformed(p0: ActionEvent) {
-                if(monitoring){
-                    // stop
-                    monitoring = false
-                    putValue(Action.NAME,"Start Monitor")
-                }else{
-                    // start
-                    monitoring = true
-                    putValue(Action.NAME,"Stop Monitor")
-                }
-            }
-        }))
-        addSeparator()
-        add(JButton(object : AbstractAction("Run SQL"){
-            override fun actionPerformed(p0: ActionEvent) {
-                query()
-            }
-        }))
-        addSeparator()
-        add(JButton(object : AbstractAction("Dump"){
+    val proxyAction:Action = action("Start Proxy"){
+        if(proxy!=null && proxy!!.isRunning()){
+            proxy!!.closeSocket()
+            proxyAction.putValue(Action.NAME,"Start Proxy")
+        }else{
+            proxy = jProxy(18888, "", 0, 20000)
+            proxy!!.start()
+            proxyAction.putValue(Action.NAME,"Stop Proxy")
+        }
+    }
+
+    var monitoring = false
+    val monitorAction:Action = action("Start Monitor"){
+        if(monitoring){
+            // stop
+            monitoring = false
+            monitorAction.putValue(Action.NAME,"Start Monitor")
+        }else{
+            // start
+            monitoring = true
+            monitorAction.putValue(Action.NAME,"Stop Monitor")
+        }
+    }
+
+    val dumpAction = action("Dump"){
+        if(rsTable.getSelectedRow()>=0) {
             val fileChooser = JFileChooser()
-            override fun actionPerformed(p0: ActionEvent) {
-                if(rsTable.getSelectedRow()<0) return
-                val index = rsTable.convertRowIndexToModel( rsTable.getSelectedRow() )
-                val returnVal = fileChooser.showSaveDialog(frame)
-                if(returnVal == JFileChooser.APPROVE_OPTION) {
-                    dataModel[index].content?.inputStream?.copyTo(FileOutputStream(fileChooser.getSelectedFile()!!))
-                }
+            val index = rsTable.convertRowIndexToModel( rsTable.getSelectedRow() )
+            val returnVal = fileChooser.showSaveDialog(frame)
+            if(returnVal == JFileChooser.APPROVE_OPTION) {
+                dataModel[index].content?.inputStream?.copyTo(FileOutputStream(fileChooser.getSelectedFile()!!))
             }
-        }))
+        }
+    }
+
+    val queryAction = action("Run SQL"){
+        query()
+    }
+
+    val consoleAction = action("Database Console"){
+        org.h2.tools.Console.main()
+    }
+
+    val toolbar = JToolBar() me {
+        add(JButton(proxyAction))
+        add(JButton(monitorAction))
+
+        addSeparator()
+        add(JButton(queryAction))
+        addSeparator()
+        add(JButton(dumpAction))
+        addSeparator()
+        add(JButton(consoleAction))
+
     }
 
 
