@@ -1,4 +1,3 @@
-httpproxy
-=========
+A pure java Http Proxy server, written in [kotlin](http://kotlin.jetbrain.org) .
 
-A simple http proxy with a swing ui to view all request/response. All requests are save in db (h2database) for viewing later.
+Core code is translated from [nsftools](http://www.nsftools.com) .
