@@ -198,7 +198,7 @@ class MainFrame(val title:String) : JFrame(title){
             val index = rsTable.convertRowIndexToModel( rsTable.getSelectedRow() )
             val returnVal = fileChooser.showSaveDialog(frame)
             if(returnVal == JFileChooser.APPROVE_OPTION) {
-                dataModel[index].content?.inputStream?.copyTo(FileOutputStream(fileChooser.getSelectedFile()!!))
+                dataModel[index].dump(FileOutputStream(fileChooser.getSelectedFile()!!))
             }
         }
     }
@@ -213,6 +213,7 @@ class MainFrame(val title:String) : JFrame(title){
 
     val toolbar = JToolBar() me {
         add(JButton(proxyAction))
+        add(JLabel(" "))
         add(JButton(monitorAction))
 
         addSeparator()
@@ -265,15 +266,11 @@ class MainFrame(val title:String) : JFrame(title){
         dataModel[index] self { he ->
             requestHeaderText.setText(he.requestHeader)
             ResponseHeaderText.setText(he.responseHeader)
-            he.content ifNotNull { it ->
-                var content = it
-                if(he.contentEncoding.indexOf("gzip")>=0){
-                    content = GZIPInputStream(it.inputStream).readBytes()
-                }
+            he.content ifNotNull {
                 if (he.contentType.indexOf("image") >= 0) {
-                    previewPanel.previewImage(content)
+                    previewPanel.previewImage(he.realContent()!!)
                 }else{
-                    previewPanel.previewText(String(content))
+                    previewPanel.previewText(String(he.realContent()!!))
                 }
             }
         }

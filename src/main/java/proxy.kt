@@ -5,6 +5,7 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.util.Date
 import java.util.Arrays
+import java.util.zip.GZIPInputStream
 
 private val DEFAULT_TIMEOUT = 20 * 1000
 private val DEFAULT_DEBUG_LEVEL = 0
@@ -422,6 +423,19 @@ contentType:${contentType}
 contentEncoding:${contentEncoding}
 """
 
+    }
+
+    fun realContent():ByteArray? {
+        if(content==null){ return null}
+        var cnt = content!!
+        if(contentEncoding.indexOf("gzip")>=0){
+            cnt = GZIPInputStream(cnt.inputStream).readBytes()
+        }
+        return cnt
+    }
+
+    fun dump(output:OutputStream){
+        realContent()?.inputStream?.copyTo(output)
     }
 
     class object {
